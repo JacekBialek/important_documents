@@ -1,0 +1,259 @@
+
+```{r}
+
+#install.packages("PriceIndices") 
+
+
+library("PriceIndices") 
+library("dplyr") 
+periods<-c("2018-12","2019-01","2019-02","2019-03","2019-04","2019-05","2019-06","2019-07","2019-08","2019-09","2019-10","2019-11","2019-12","2020-01","2020-02","2020-03","2020-04","2020-05","2020-06","2020-07","2020-08")
+t<-length(periods)
+
+M<-3 #number of subgroups
+reg<-matched(sugar, periods[1],periods[1],type="retID") #available regions (outlets)
+N<-length(reg)
+
+#subgroups
+data1<-dplyr::filter(sugar,sugar$description=="white sugar")
+data1$prices<-data1$prices/data1$prices[1]
+data2<-dplyr::filter(sugar,sugar$description=="cane sugar")
+data2$prices<-data2$prices/data2$prices[1]
+data3<-dplyr::filter(sugar,sugar$description=="powdered sugar")
+data3$prices<-data3$prices/data3$prices[1]
+
+#initial prices for 'white sugar'
+price01<-list()
+for (i in 1:length(reg)) {
+  data<-dplyr::filter(data1, data1$retID==reg[i])
+  price01[[i]]<-mean(prices(data,periods[1]))
+}
+price01<-unlist(price01)
+
+#initial prices for 'cane sugar'
+price02<-list()
+for (i in 1:length(reg)) {
+  data<-dplyr::filter(data2, data2$retID==reg[i])
+  price02[[i]]<-mean(prices(data,periods[1]))
+}
+price02<-unlist(price02)
+
+#initial prices for 'powdered sugar'
+price03<-list()
+for (i in 1:length(reg)) {
+  data<-dplyr::filter(data3, data3$retID==reg[i])
+  price03[[i]]<-mean(prices(data,periods[1]))
+}
+price03<-unlist(price03)
+
+print("Parameters for 'white sugar'")
+#empirical mean prices
+mean_price<-function (period) mean(prices(data1, period))
+means<-sapply(periods, mean_price)
+#estimating of parameters in GMB model
+# calculating log returns
+returns <- diff(log(means))
+# calculate mu (drift)
+alfa1<-mean(returns)
+# calculate sigma
+beta1<-sd(returns)
+print("Model parameters")
+alfa1
+beta1
+
+
+print("Parameters for 'cane sugar'")
+#empirical mean prices
+mean_price<-function (period) mean(prices(data2, period))
+means<-sapply(periods, mean_price)
+#estimating of parameters in GMB model
+# calculating log returns
+returns <- diff(log(means))
+# calculate mu (drift)
+alfa2<-mean(returns)
+# calculate sigma
+beta2<-sd(returns)
+print("Model parameters")
+alfa2
+beta2
+
+print("Parameters for 'powdered sugar'")
+#empirical mean prices
+mean_price<-function (period) mean(prices(data3, period))
+means<-sapply(periods, mean_price)
+#estimating of parameters in GMB model
+# calculating log returns
+returns <- diff(log(means))
+# calculate mu (drift)
+alfa3<-mean(returns)
+# calculate sigma
+beta3<-sd(returns)
+print("Model parameters")
+alfa3
+beta3
+
+#Population indices for the whole elementary group
+print("Population indices: Dutot, Carli, Jevons")
+#Dutot
+dutot_population<-(mean(price01)/(mean(price01)+mean(price02)+mean(price03)))*exp(alfa1*t)+
+  (mean(price02)/(mean(price01)+mean(price02)+mean(price03)))*exp(alfa2*t)+
+  (mean(price03)/(mean(price01)+mean(price02)+mean(price03)))*exp(alfa3*t)
+
+#Carli
+carli_population<-(exp(alfa1*t)+exp(alfa2*t)+exp(alfa3*t))/M
+
+#Jevons
+jevons_population<-(exp(alfa1*t-beta1^2/2)*exp(alfa2*t-beta2^2/2)*exp(alfa3*t-beta3^2/2))^(1/M)
+dutot_population
+carli_population
+jevons_population
+
+#Sample elementary indices for the whole elementary group (calculated directly from formulas):
+print("Sample price indices: Dutot, Carli, Jevons (calculated by using direct formulas):")
+(dutot(data1, start="2018-12",end="2020-08")+dutot(data2, start="2018-12",end="2020-08")+dutot(data3, start="2018-12",end="2020-08"))/3
+(carli(data1, start="2018-12",end="2020-08")+carli(data2, start="2018-12",end="2020-08")+carli(data3, start="2018-12",end="2020-08"))/3
+(jevons(data1, start="2018-12",end="2020-08")+jevons(data2, start="2018-12",end="2020-08")+jevons(data3, start="2018-12",end="2020-08"))/3
+
+print("Basic characteristics of parametric sample indices (calculated by using estimated parameters):")
+print("expected value + standard_deviation+variance")
+
+print("Sample Dutot index")
+expected_sample_dutot<-(exp(alfa1*t)+exp(alfa2*t)+exp(alfa3*t))/M
+variance_sample_dutot<-(1/M^2)*(
+  (sum(price01*price01)/sum(price01)^2)*
+  exp(2*alfa1*t)*(exp(beta1^2*t)-1)+
+  (sum(price02*price02)/sum(price02)^2)*
+    exp(2*alfa2*t)*(exp(beta2^2*t)-1)+
+   (sum(price03*price03)/sum(price03)^2)* 
+    exp(2*alfa3*t)*(exp(beta3^2*t)-1)
+)
+expected_sample_dutot
+variance_sample_dutot^0.5
+variance_sample_dutot
+
+print("Sample Carli index")
+expected_sample_carli<-(exp(alfa1*t)+exp(alfa2*t)+exp(alfa3*t))/M
+variance_sample_carli<-(1/(N*M^2))*(
+  exp(2*alfa1*t)*(exp(beta1^2*t)-1)+
+    exp(2*alfa2*t)*(exp(beta2^2*t)-1)+
+    exp(2*alfa3*t)*(exp(beta3^2*t)-1)
+)
+expected_sample_carli
+variance_sample_carli^0.5
+variance_sample_carli
+
+print("Sample Jevons index")
+expected_sample_jevons<-((exp((1-N)/(2*N^2)*beta1^2*t))*exp(alfa1*t)+(exp((1-N)/(2*N^2)*beta2^2*t))*exp(alfa2*t)+(exp((1-N)/(2*N^2)*beta3^2*t))*exp(alfa3*t))/M
+variance_sample_jevons<-(1/(N*M^2))*(
+  exp(2*alfa1*t-beta1^2*t)*beta1^2*t+
+    exp(2*alfa2*t-beta2^2*t)*beta2^2*t+
+    exp(2*alfa3*t-beta3^2*t)*beta1^3*t
+)
+
+expected_sample_jevons
+variance_sample_jevons^0.5
+variance_sample_jevons
+```
+
+
+```{r}
+#graphical results
+
+#population indices
+#Dutot
+dutot_population<-function (t) (mean(price01)/(mean(price01)+mean(price02)+mean(price03)))*exp(alfa1*t)+
+  (mean(price02)/(mean(price01)+mean(price02)+mean(price03)))*exp(alfa2*t)+
+  (mean(price03)/(mean(price01)+mean(price02)+mean(price03)))*exp(alfa3*t)
+#Carli
+carli_population<-function (t) (exp(alfa1*t)+exp(alfa2*t)+exp(alfa3*t))/M
+#Jevons
+jevons_population<-function (t) (exp(alfa1*t-beta1^2/2)*exp(alfa2*t-beta2^2/2)*exp(alfa3*t-beta3^2/2))^(1/M)
+
+#sample indices (calculated by using estimated parameters)
+#Dutot
+expected_sample_dutot<-function (t) (exp(alfa1*t)+exp(alfa2*t)+exp(alfa3*t))/M
+#Carli
+expected_sample_carli<-function (t) (exp(alfa1*t)+exp(alfa2*t)+exp(alfa3*t))/M
+#Jevons
+expected_sample_jevons<-function (t)
+  ((exp((1-N)/(2*N^2)*beta1^2*t))*exp(alfa1*t)+(exp((1-N)/(2*N^2)*beta2^2*t))*exp(alfa2*t)+(exp((1-N)/(2*N^2)*beta3^2*t))*exp(alfa3*t))/M
+
+
+#variances of sample indices
+#Dutot
+variance_sample_dutot<-function (t) (1/M^2)*(
+  (sum(price01*price01)/sum(price01)^2)*
+  exp(2*alfa1*t)*(exp(beta1^2*t)-1)+
+  (sum(price02*price02)/sum(price02)^2)*
+    exp(2*alfa2*t)*(exp(beta2^2*t)-1)+
+   (sum(price03*price03)/sum(price03)^2)* 
+    exp(2*alfa3*t)*(exp(beta3^2*t)-1))
+#Carli
+variance_sample_carli<-function(t) (1/(N*M^2))*(
+  exp(2*alfa1*t)*(exp(beta1^2*t)-1)+
+    exp(2*alfa2*t)*(exp(beta2^2*t)-1)+
+    exp(2*alfa3*t)*(exp(beta3^2*t)-1))
+#Jevons
+variance_sample_jevons<-function (t) (1/(N*M^2))*(
+  exp(2*alfa1*t-beta1^2*t)*beta1^2*t+
+    exp(2*alfa2*t-beta2^2*t)*beta2^2*t+
+    exp(2*alfa3*t-beta3^2*t)*beta1^3*t)
+
+#calculations for each date
+#population indices
+dutot_population_all<-sapply(seq(1,length(periods)),dutot_population)
+dutot_population_all[1]<-1
+carli_population_all<-sapply(seq(1,length(periods)),carli_population)
+carli_population_all[1]<-1
+jevons_population_all<-sapply(seq(1,length(periods)),jevons_population)
+jevons_population_all[1]<-1
+
+#sample indices
+expected_sample_dutot_all<-sapply(seq(1,length(periods)),expected_sample_dutot)
+expected_sample_dutot_all[1]<-1
+expected_sample_carli_all<-sapply(seq(1,length(periods)),expected_sample_carli)
+expected_sample_carli_all[1]<-1
+expected_sample_jevons_all<-sapply(seq(1,length(periods)),expected_sample_jevons)
+expected_sample_jevons_all[1]<-1
+
+#variances of sample indices
+variance_sample_dutot_all<-sapply(seq(1,length(periods)),variance_sample_dutot)
+variance_sample_carli_all<-sapply(seq(1,length(periods)),variance_sample_carli)
+variance_sample_jevons_all<-sapply(seq(1,length(periods)),variance_sample_jevons)
+
+#creating graphs in PriceIndices package
+library("PriceIndices")
+df_dutot_population<-data.frame(date=periods,population_Dutot=dutot_population_all)
+df_dutot_sample<-data.frame(date=periods,sample_Dutot=expected_sample_dutot_all)
+fig1<-compare_final_indices(finalindices = list(df_dutot_population,df_dutot_sample), names = c("Population Dutot","Sample Dutot"))
+
+df_carli_population<-data.frame(date=periods,population_Carli=carli_population_all)
+df_carli_sample<-data.frame(date=periods,sample_Carli=expected_sample_carli_all)
+fig2<-compare_final_indices(finalindices = list(df_carli_population,df_carli_sample), names = c("Population Carli","Sample Carli"))
+
+df_jevons_population<-data.frame(date=periods,population_Jevons=jevons_population_all)
+df_jevons_sample<-data.frame(date=periods,sample_Javons=expected_sample_jevons_all)
+fig3<-compare_final_indices(finalindices = list(df_jevons_population,df_jevons_sample), names = c("Population Jevons","Sample Jevons"))
+
+df_variance_dutot<-data.frame(date=periods,variance_Dutot=variance_sample_dutot_all)
+df_variance_carli<-data.frame(date=periods,variance_Carli=variance_sample_carli_all)
+df_variance_jevons<-data.frame(date=periods,variance_Jevons=variance_sample_jevons_all)
+fig4<-compare_final_indices(finalindices = list(df_variance_dutot,df_variance_carli,df_variance_jevons), names = c("Variance of the sample Dutot","Variance of the sample Carli","Variance of the sample Jevons"))
+fig4<-fig4+ggplot2::labs(y="value of variance")
+
+fig1
+fig2
+fig3
+fig4
+
+#figure saving 
+library("ggpubr")
+ggexport(fig1, filename = "fig_dutot.tiff")
+ggexport(fig2, filename = "fig_carli.tiff")
+ggexport(fig3, filename = "fig_jevons.tiff")
+ggexport(fig4, filename = "fig_variance.tiff")
+
+```
+
+
+
+
