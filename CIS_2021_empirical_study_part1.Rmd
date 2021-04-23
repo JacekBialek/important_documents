@@ -1,0 +1,75 @@
+
+```{r}
+#install.packages("remotes") 
+#remotes::install_github("JacekBialek/PriceIndices")
+
+library("PriceIndices")
+library("dplyr")
+periods<-c("2019-10","2019-11","2019-12","2020-01","2020-02","2020-03","2020-04","2020-05","2020-06","2020-07","2020-08")
+t<-length(periods)
+data<-dplyr::filter(milk, milk$description=="low-fat milk UHT")
+
+#dataset description:
+#nrow(data)
+#length(unique(data$prodID))
+
+#empirical mean prices
+mean_price<-function (period) mean(prices(data, period))
+means<-sapply(periods, mean_price)
+
+
+#estimating of parameters in GMB model
+# calculating log returns
+returns <- diff(log(means))
+# calculate mu (drift)
+alfa<-mean(returns)
+# calculate sigma
+beta<-sd(returns)
+print("Model parameters")
+alfa
+beta
+
+#theoretical expected value of the price process
+ex_val<-function(x) means[1]*exp(alfa*x)
+std_dev<-function (x) means[1]*(exp(2*alfa*x)*(exp(beta^2*x)-1))^0.5
+
+#model fit
+print("MSE for a model")
+time<-seq(1,t)
+ex<-sapply(time, ex_val)
+mean((means-ex)^2)
+
+#typical price range
+up<-function (x) ex_val(x)+std_dev(x)
+low<-function (x) ex_val(x)-std_dev(x)
+
+#graphical result
+plot(means,ylim = c(1.7,3),type="b",xlab="month",ylab="mean price value")
+curve(ex_val(x),from=1, to=t,type="l",col="red",lty=3,add=TRUE)
+curve(up(x),from=1, to=t,type="l",col="blue",lty=3,add=TRUE)
+curve(low(x),from=1, to=t,type="l",col="blue",lty=3,add=TRUE)
+legend("bottomright",c("Empirical mean price values","Expected price value","Typical price range"),fill=c("black","red","blue"),ncol=2,title="Legend", cex=0.8)
+
+#Sample elementary indices:
+print("Sample price indices: Dutot, Carli, Jevons")
+dutot(data, start="2019-10",end="2020-08")
+carli(data, start="2019-10",end="2020-08")
+jevons(data, start="2019-10",end="2020-08")
+
+print("Basic characteristics of parametric sample indices, i.e. expected value + variance")
+N<-length(periods)
+print("Dutot: expected value + variance")
+exp(alfa*t)
+((exp(2*alfa*t)*(exp(beta^2*t)-1)))*sum(means[1]^2)/(sum(means[1]))^2
+print("Carli: expected value + variance")
+exp(alfa*t)
+((exp(2*alfa*t)*(exp(beta^2*t)-1)))/N
+print("Jevons: expected value + varianceA+varianceB")
+vol<-exp((1-N)*beta^2*t/(2*N^2))
+vol*(exp(alfa*t))
+((exp(2*alfa*t)*(exp(beta^2*t)-1)))/(exp(2*alfa*t)*N)
+exp((2*alfa-beta^2)*t)*beta^2*t/N
+
+```
+
+
