@@ -1,0 +1,161 @@
+
+```{r}
+library("PriceIndices")
+library("ggpubr")
+#generating datasets (each dataset has 1300 records)
+set.seed(111)
+
+#Case 1
+p.mi<-c(1,1.02,1.03,1.05,1.08,1.13,1.22,1.15,1.11,1.08,1.05,1.03,1)
+p.sigma<-0.05*p.mi
+q.mi<-10/p.mi
+q.sigma<-0.05*q.mi
+
+data1<-generate(
+  pmi=p.mi,
+  psigma=p.sigma,
+  qmi=q.mi,
+  qsigma=q.sigma,
+  n=100,
+  r=10,
+  start="2019-12")
+
+#figure 1
+index_t<-tindex(pmi<-p.mi,psigma<-p.sigma, start="2019-12",ratio=FALSE)
+geks<-price_index(data1,start="2019-12",end="2020-12",formula="geks",window=13,interval=TRUE)
+geksaqu<-price_index(data1,start="2019-12",end="2020-12",formula="geksaqu",window=13,interval=TRUE)
+geksaqi<-price_index(data1,start="2019-12",end="2020-12",formula="geksaqi",window=13,interval=TRUE)
+gk<-price_index(data1,start="2019-12",end="2020-12",formula="gk",window=13,interval=TRUE)
+tpd<-price_index(data1,start="2019-12",end="2020-12",formula="tpd",window=13,interval=TRUE)
+spq<-price_index(data1,start="2019-12",end="2020-12",formula="SPQ",interval=TRUE)
+indices<-list(index_t,geks,geksaqu,geksaqi,gk,tpd,spq)
+df<-dplyr::bind_cols(indices)
+compare_distances(df)
+fig1<-compare_final_indices(finalindices=indices,names=c("Theoretical index","GEKS","GEKS-AQU","GEKS-AQI","Geary-Khamis","TPD","SPQ"))
+fig1<-fig1+ggtitle("Case 1")
+
+
+#Case 2
+p.mi<-c(1,1.02,1.03,1.05,1.08,1.13,1.22,1.15,1.11,1.08,1.05,1.03,1)
+p.sigma<-0.5*p.mi
+q.mi<-10/p.mi
+q.sigma<-0.05*q.mi
+
+data2<-generate(
+  pmi=p.mi,
+  psigma=p.sigma,
+  qmi=q.mi,
+  qsigma=q.sigma,
+  n=100,
+  r=10,
+  start="2019-12")
+
+#figure 2
+index_t<-tindex(pmi<-p.mi,psigma<-p.sigma, start="2019-12",ratio=FALSE)
+geks<-price_index(data2,start="2019-12",end="2020-12",formula="geks",window=13,interval=TRUE)
+geksaqu<-price_index(data2,start="2019-12",end="2020-12",formula="geksaqu",window=13,interval=TRUE)
+geksaqi<-price_index(data2,start="2019-12",end="2020-12",formula="geksaqi",window=13,interval=TRUE)
+gk<-price_index(data2,start="2019-12",end="2020-12",formula="gk",window=13,interval=TRUE)
+tpd<-price_index(data2,start="2019-12",end="2020-12",formula="tpd",window=13,interval=TRUE)
+spq<-price_index(data2,start="2019-12",end="2020-12",formula="SPQ",interval=TRUE)
+indices<-list(index_t,geks,geksaqu,geksaqi,gk,tpd,spq)
+df<-dplyr::bind_cols(indices)
+compare_distances(df)
+fig2<-compare_final_indices(finalindices=indices,names=c("Theoretical index","GEKS","GEKS-AQU","GEKS-AQI","Geary-Khamis","TPD","SPQ"))
+fig2<-fig2+ggtitle("Case 2")
+
+#Case 3
+p.mi<-c(1,1.02,1.03,1.05,1.08,1.13,1.22,1.15,1.11,1.08,1.05,1.03,1)
+p.sigma<-0.05*p.mi
+q.mi<-10/p.mi
+q.sigma<-0.5*q.mi
+
+data3<-generate(
+  pmi=p.mi,
+  psigma=p.sigma,
+  qmi=q.mi,
+  qsigma=q.sigma,
+  n=100,
+  r=10,
+  start="2019-12")
+
+#figure 3
+index_t<-tindex(pmi<-p.mi,psigma<-p.sigma, start="2019-12",ratio=FALSE)
+geks<-price_index(data3,start="2019-12",end="2020-12",formula="geks",window=13,interval=TRUE)
+geksaqu<-price_index(data3,start="2019-12",end="2020-12",formula="geksaqu",window=13,interval=TRUE)
+geksaqi<-price_index(data3,start="2019-12",end="2020-12",formula="geksaqi",window=13,interval=TRUE)
+gk<-price_index(data3,start="2019-12",end="2020-12",formula="gk",window=13,interval=TRUE)
+tpd<-price_index(data3,start="2019-12",end="2020-12",formula="tpd",window=13,interval=TRUE)
+spq<-price_index(data3,start="2019-12",end="2020-12",formula="SPQ",interval=TRUE)
+indices<-list(index_t,geks,geksaqu,geksaqi,gk,tpd,spq)
+df<-dplyr::bind_cols(indices)
+compare_distances(df)
+fig3<-compare_final_indices(finalindices=indices,names=c("Theoretical index","GEKS","GEKS-AQU","GEKS-AQI","Geary-Khamis","TPD","SPQ"))
+fig3<-fig3+ggtitle("Case 3")
+
+#Case 4
+p.mi<-c(1,1.02,1.03,1.05,1.08,1.13,1.22,1.15,1.11,1.08,1.05,1.03,1)
+p.sigma<-0.5*p.mi
+q.mi<-10/p.mi
+q.sigma<-0.5*q.mi
+
+data4<-generate(
+  pmi=p.mi,
+  psigma=p.sigma,
+  qmi=q.mi,
+  qsigma=q.sigma,
+  n=100,
+  r=10,
+  start="2019-12")
+
+#figure 4
+index_t<-tindex(pmi<-p.mi,psigma<-p.sigma, start="2019-12",ratio=FALSE)
+geks<-price_index(data4,start="2019-12",end="2020-12",formula="geks",window=13,interval=TRUE)
+geksaqu<-price_index(data4,start="2019-12",end="2020-12",formula="geksaqu",window=13,interval=TRUE)
+geksaqi<-price_index(data4,start="2019-12",end="2020-12",formula="geksaqi",window=13,interval=TRUE)
+gk<-price_index(data4,start="2019-12",end="2020-12",formula="gk",window=13,interval=TRUE)
+tpd<-price_index(data4,start="2019-12",end="2020-12",formula="tpd",window=13,interval=TRUE)
+spq<-price_index(data4,start="2019-12",end="2020-12",formula="SPQ",interval=TRUE)
+indices<-list(index_t,geks,geksaqu,geksaqi,gk,tpd,spq)
+df<-dplyr::bind_cols(indices)
+compare_distances(df)
+fig4<-compare_final_indices(finalindices=indices,names=c("Theoretical index","GEKS","GEKS-AQU","GEKS-AQI","Geary-Khamis","TPD","SPQ"))
+fig4<-fig4+ggtitle("Case 4")
+
+#Joining all figures
+figure <- ggarrange(fig1, fig2, fig3, fig4,
+                    common.legend = TRUE,
+                    legend=c("bottom"),
+                    ncol = 2, nrow = 2)
+figure
+
+#saving figures to files
+ggsave(plot = figure, file = "figure_sim1.pdf", width = 8, height = 8)
+```
+```{r}
+library("PriceIndices")
+library("microbenchmark")
+#comparing times of working
+geks_<-function () price_index(data4,start="2019-12",end="2020-12",formula="geks",window=13,interval=TRUE)
+geksaqu_<-function () price_index(data4,start="2019-12",end="2020-12",formula="geksaqu",window=13,interval=TRUE)
+geksaqi_<-function () price_index(data4,start="2019-12",end="2020-12",formula="geksaqi",window=13,interval=TRUE)
+gk_<-function () price_index(data4,start="2019-12",end="2020-12",formula="gk",window=13,interval=TRUE)
+tpd_<-function () price_index(data4,start="2019-12",end="2020-12",formula="tpd",window=13,interval=TRUE)
+spq_<-function () price_index(data4,start="2019-12",end="2020-12",formula="SPQ",interval=TRUE)
+
+
+pomiary<-microbenchmark(
+GEKS=geks_(),
+GEKS_AQU=geksaqu_(),
+GEKS_AQI=geksaqi_(),
+GK=gk_(),
+TPD=tpd_(),
+SPQ=spq_(),
+times=100)
+
+pomiary
+fig_comparison<-plot(pomiary)
+ggsave(plot = fig_comparison, file = "figure_sim2.pdf", width = 8, height = 8)
+
+```
+ 
