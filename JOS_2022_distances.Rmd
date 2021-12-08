@@ -1,0 +1,260 @@
+ 
+
+```{r}
+library("lubridate")
+library("dplyr")
+library("ggplot2")
+library("ggpubr")
+library("PriceIndices")
+
+cor=-1; # negative correlation
+#cor=1; #positive correlation
+
+#generating dates
+data1<-as.Date("2019-12-01")
+dates<-c(data1)
+for (i in seq(1,24)) {
+  month(data1)<-month(data1)+1
+  dates<-c(dates, data1)
+}
+
+#generating prices
+pr<-function(i,t)
+{
+  if (t<=12) return(140-cor*i*t)
+  else
+    return(140-cor*i*(24-t))
+}
+
+price<-function(i)
+{x<-seq(0,24)
+ fun<-function (t) return (pr(i,t))
+ vec<-sapply(x,fun)
+ return (vec)
+}
+
+#generating quantities
+delta=0;
+qr<-function(i,t)
+{
+  if (t<=12+delta) return(210-i*t)
+  else
+    return(210-i*(12+delta)+i*(12+delta)*(t-12-delta)/(12-delta))
+}
+
+quantity<-function(i)
+{x<-seq(0,24)
+ fun<-function (t) return (qr(i,t))
+ vec<-sapply(x,fun)
+ return (vec)
+}
+
+#generating a data set (n=10 products)
+n<-10
+data<-list()
+
+for (i in seq(1,n))
+{
+  time<-as.Date(dates)
+  prices<-price(i)
+  quantities<-quantity(i)
+  prodID<-i
+  data[[i]]<-data.frame(time, prices, quantities, prodID)
+}
+
+set0<-bind_rows(data)
+set0<-dplyr::arrange(set0, prodID)
+set0$prodID<-as.character(set0$prodID)
+
+
+delta=2;
+qr<-function(i,t)
+{
+  if (t<=12+delta) return(210-i*t)
+  else
+    return(210-i*(12+delta)+i*(12+delta)*(t-12-delta)/(12-delta))
+}
+
+quantity<-function(i)
+{x<-seq(0,24)
+ fun<-function (t) return (qr(i,t))
+ vec<-sapply(x,fun)
+ return (vec)
+}
+
+data<-list()
+for (i in seq(1,n))
+{
+  
+  time<-as.Date(dates)
+  prices<-price(i)
+  quantities<-quantity(i)
+  prodID<-i
+  data[[i]]<-data.frame(time, prices, quantities, prodID)
+}
+
+set1<-bind_rows(data)
+set1<-dplyr::arrange(set1, prodID)
+set1$prodID<-as.character(set1$prodID)
+
+delta=4;
+qr<-function(i,t)
+{
+  if (t<=12+delta) return(210-i*t)
+  else
+    return(210-i*(12+delta)+i*(12+delta)*(t-12-delta)/(12-delta))
+}
+
+quantity<-function(i)
+{x<-seq(0,24)
+ fun<-function (t) return (qr(i,t))
+ vec<-sapply(x,fun)
+ return (vec)
+}
+
+data<-list()
+for (i in seq(1,n))
+{
+  
+  time<-as.Date(dates)
+  prices<-price(i)
+  quantities<-quantity(i)
+  prodID<-i
+  data[[i]]<-data.frame(time, prices, quantities, prodID)
+}
+
+set2<-bind_rows(data)
+set2<-dplyr::arrange(set2, prodID)
+set2$prodID<-as.character(set2$prodID)
+
+delta=6;
+qr<-function(i,t)
+{
+  if (t<=12+delta) return(210-i*t)
+  else
+    return(210-i*(12+delta)+i*(12+delta)*(t-12-delta)/(12-delta))
+}
+
+quantity<-function(i)
+{x<-seq(0,24)
+ fun<-function (t) return (qr(i,t))
+ vec<-sapply(x,fun)
+ return (vec)
+}
+
+data<-list()
+for (i in seq(1,n))
+{
+  time<-as.Date(dates)
+  prices<-price(i)
+  quantities<-quantity(i)
+  prodID<-i
+  data[[i]]<-data.frame(time, prices, quantities, prodID)
+}
+
+set3<-bind_rows(data)
+set3<-dplyr::arrange(set3, prodID)
+set3$prodID<-as.character(set3$prodID)
+
+delta=8;
+qr<-function(i,t)
+{
+  if (t<=12+delta) return(210-i*t)
+  else
+    return(210-i*(12+delta)+i*(12+delta)*(t-12-delta)/(12-delta))
+}
+
+quantity<-function(i)
+{x<-seq(0,24)
+ fun<-function (t) return (qr(i,t))
+ vec<-sapply(x,fun)
+ return (vec)
+}
+
+data<-list()
+for (i in seq(1,n))
+{
+  
+  time<-as.Date(dates)
+  prices<-price(i)
+  quantities<-quantity(i)
+  prodID<-i
+  data[[i]]<-data.frame(time, prices, quantities, prodID)
+}
+
+set4<-bind_rows(data)
+set4<-dplyr::arrange(set4, prodID)
+set4$prodID<-as.character(set4$prodID)
+
+
+#index comparisons
+comparison0<-price_indices(set0, start="2019-12", end="2021-12", 
+              bilateral=c("chjevons","chfisher"),
+              fbmulti=c("geks"),fbwindow=c(25),namefbmulti=c("GEKS"), 
+              splicemulti = c("geks_splice","geks_splice","geks_splice","geks_splice"),
+              splicewindow=c(13,13,13,13),
+              splice=c("movement","window","half","mean"),
+              namesplicemulti = c("GEKS movement","GEKS window","GEKS half","GEKS mean"),
+              interval=TRUE)
+setJ<-data_filtering(set0,start="2019-12", end="2021-12",filters=c("lowsales"), interval=TRUE)
+chjevons_filtered<-price_index(setJ, formula="chjevons", start="2019-12", end="2021-12",interval=TRUE)
+comparison0<-cbind(comparison0,chjevons_filtered[,2])
+compare_distances(comparison0)
+
+
+comparison1<-price_indices(set1, start="2019-12", end="2021-12", 
+              bilateral=c("chjevons","chfisher"),
+              fbmulti=c("geks"),fbwindow=c(25),namefbmulti=c("GEKS"), 
+              splicemulti = c("geks_splice","geks_splice","geks_splice","geks_splice"),
+              splicewindow=c(13,13,13,13),
+              splice=c("movement","window","half","mean"),
+              namesplicemulti = c("GEKS movement","GEKS window","GEKS half","GEKS mean"),
+              interval=TRUE)
+setJ<-data_filtering(set1,start="2019-12", end="2021-12",filters=c("lowsales"), interval=TRUE)
+chjevons_filtered<-price_index(setJ, formula="chjevons", start="2019-12", end="2021-12",interval=TRUE)
+comparison1<-cbind(comparison1,chjevons_filtered[,2])
+compare_distances(comparison1)
+
+comparison2<-price_indices(set2, start="2019-12", end="2021-12", 
+              bilateral=c("chjevons","chfisher"),
+              fbmulti=c("geks"),fbwindow=c(25),namefbmulti=c("GEKS"), 
+              splicemulti = c("geks_splice","geks_splice","geks_splice","geks_splice"),
+              splicewindow=c(13,13,13,13),
+              splice=c("movement","window","half","mean"),
+              namesplicemulti = c("GEKS movement","GEKS window","GEKS half","GEKS mean"),
+              interval=TRUE)
+setJ<-data_filtering(set2,start="2019-12", end="2021-12",filters=c("lowsales"), interval=TRUE)
+chjevons_filtered<-price_index(setJ, formula="chjevons", start="2019-12", end="2021-12",interval=TRUE)
+comparison2<-cbind(comparison2,chjevons_filtered[,2])
+compare_distances(comparison2)
+
+
+comparison3<-price_indices(set3, start="2019-12", end="2021-12", 
+              bilateral=c("chjevons","chfisher"),
+              fbmulti=c("geks"),fbwindow=c(25),namefbmulti=c("GEKS"), 
+              splicemulti = c("geks_splice","geks_splice","geks_splice","geks_splice"),
+              splicewindow=c(13,13,13,13),
+              splice=c("movement","window","half","mean"),
+              namesplicemulti = c("GEKS movement","GEKS window","GEKS half","GEKS mean"),
+              interval=TRUE)
+setJ<-data_filtering(set3,start="2019-12", end="2021-12",filters=c("lowsales"), interval=TRUE)
+chjevons_filtered<-price_index(setJ, formula="chjevons", start="2019-12", end="2021-12",interval=TRUE)
+comparison3<-cbind(comparison3,chjevons_filtered[,2])
+compare_distances(comparison3)
+
+
+comparison4<-price_indices(set4, start="2019-12", end="2021-12", 
+              bilateral=c("chjevons","chfisher"),
+              fbmulti=c("geks"),fbwindow=c(25),namefbmulti=c("GEKS"), 
+              splicemulti = c("geks_splice","geks_splice","geks_splice","geks_splice"),
+              splicewindow=c(13,13,13,13),
+              splice=c("movement","window","half","mean"),
+              namesplicemulti = c("GEKS movement","GEKS window","GEKS half","GEKS mean"),
+              interval=TRUE)
+setJ<-data_filtering(set4,start="2019-12", end="2021-12",filters=c("lowsales"), interval=TRUE)
+chjevons_filtered<-price_index(setJ, formula="chjevons", start="2019-12", end="2021-12",interval=TRUE)
+comparison4<-cbind(comparison4,chjevons_filtered[,2])
+compare_distances(comparison4)
+
+```
+
