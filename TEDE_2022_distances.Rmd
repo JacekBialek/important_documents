@@ -188,6 +188,7 @@ set4$prodID<-as.character(set4$prodID)
 
 
 #index comparisons
+#Note: if you are using package version > 0.0.9 you must modify parameter names used inside the function 'price_indices"
 comparison0<-price_indices(set0, start="2019-12", end="2021-12", 
               bilateral=c("chjevons","chfisher"),
               fbmulti=c("geks"),fbwindow=c(25),namefbmulti=c("GEKS"), 
