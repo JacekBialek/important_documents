@@ -1,6 +1,9 @@
 
 
 ```{r}
+# Calculating the Divisia price index for the purpose of an example 1 in the paper "Potential reasons for CPI chain drift bias while using
+# electronic transaction data" (in: Technological and Economic Development of Economy)
+
 #price processes
 p1<-function (t) 50-5*sin(2*pi*t)
 p2<-function (t) 50+t^3-t^2
