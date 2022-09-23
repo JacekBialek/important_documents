@@ -1,0 +1,33 @@
+
+
+```{r}
+#price processes
+p1<-function (t) 50-5*sin(2*pi*t)
+p2<-function (t) 50+t^3-t^2
+p3<-function (t) 50-3*cos(8*pi*t)
+
+#quantity processes
+q1<-function (t) 10+cos(4*pi*t)
+q2<-function (t) 10+2*sin(2*pi*t)
+q3<-function (t) 10+5*sin(8*pi*t)
+
+#denominator
+denominator<-function (t) 
+  return (p1(t)*q1(t)+p2(t)*q2(t)+p3(t)*q3(t))
+
+#main function
+f<-function (t) (q1(t)*(-10*pi*cos(2*pi*t))+q2(t)*(3*t^2-2*t)+q3(t)*24*pi*sin(8*pi*t))/denominator(t)
+
+h=0.00001 #precision
+
+#numeric integral
+integral<-0
+for (i in 1:100000) 
+  integral<-integral+h*f(i*h)
+integral<-exp(integral)
+
+#printing result
+paste("A value of integral is: ",integral)
+
+```
+
