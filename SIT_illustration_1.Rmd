@@ -1,0 +1,81 @@
+
+
+```{r}
+library("PriceIndices")
+set.seed(162)
+
+#data reduction to the year 2019:
+coffee<-dplyr::filter(coffee, time>=as.Date("2019-01-01") & time<as.Date("2020-01-01"))
+n<-4 #sample size
+N<-length(unique(coffee$retID))
+
+#universe (population)
+all_outlets<-unique(coffee$retID)
+
+
+#expenditure shares of outlets
+df<-dplyr::summarise(dplyr::group_by(coffee, retID), expenditure=sum(prices*quantities))
+expenditure<-df$expenditure
+cumulative_expenditure<-cumsum(expenditure)
+expenditure_shares<-expenditure/sum(expenditure)
+
+#zi
+zi<-n*expenditure_shares
+
+#random uniform numbers
+ui<-runif(N,0,1)
+
+#sequential pps
+Qi_seq<-ui/zi
+
+#Pareto pps sampling
+Qi_Par<-(ui*(1-zi))/(zi*(1-ui))
+
+data<-data.frame(outlet_id=all_outlets, xi=expenditure, cum_xi=cumulative_expenditure, zi=zi, ui=ui, Qi_seq=Qi_seq, Qi_Par=Qi_Par)
+
+data
+
+#sampling
+
+#simple sampling
+simple_sampling<-sample(N, size = n, replace = TRUE, prob = NULL)
+print("simple sampling")
+all_outlets[simple_sampling]
+
+#systematic pps sampling
+max_interval<-round(sum(expenditure)/n)
+one_sample_number<-sample(max_interval, size = 1, replace = TRUE, prob = NULL)
+cum_expenditure_to_be_covered<-c(one_sample_number,
+                                 one_sample_number+max_interval,
+                                 one_sample_number+2*max_interval, 
+                                 one_sample_number+3*max_interval)
+
+s1<-all_outlets[cumulative_expenditure<one_sample_number]
+s2<-all_outlets[cumulative_expenditure<one_sample_number+max_interval]
+s3<-all_outlets[cumulative_expenditure<one_sample_number+2*max_interval]
+s4<-all_outlets[cumulative_expenditure<one_sample_number+4*max_interval]
+print("systematic pps sampling")
+c(s1[length(s1)],s2[length(s2)],s3[length(s3)],s4[length(s4)])
+
+
+#sequential pps sampling
+cut<-sort(Qi_seq)
+cut<-cut[n]
+print("sequential pps sampling")
+all_outlets[data$Qi_seq <= cut]
+
+#Pareto pps sampling
+cut_p<-sort(Qi_Par)
+cut_p<-cut_p[n]
+print("Pareto pps sampling")
+all_outlets[data$Qi_Par <= cut_p]
+
+```
+
+```{r}
+library('xtable')
+print(xtable(data, type = "latex"), file = "data.tex")
+length(unique(coffee$prodID))
+nrow(coffee)
+```
+
