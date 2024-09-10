@@ -1,0 +1,183 @@
+
+
+```{r}
+library("PriceIndices")
+
+#cut-off sampling
+
+#data reduction to the year 2019:
+coffee<-dplyr::filter(coffee, time>=as.Date("2019-01-01") & time<as.Date("2020-01-01"))
+
+N<-length(unique(coffee$prodID)) #we have 79 units (prodIDs)
+n<-9 #sample size
+
+#The whole population
+print("The whole population")
+print("--------------------------------")
+print(paste("Number of products: ", as.character(N)))
+print(paste("Total value of sales: ", as.character(sum(coffee$prices*coffee$quantities))))
+print(paste("Number of sold products: ", as.character(sum(coffee$quantities))))
+
+#Sample, where n=9
+#COICOP 5 level
+print("--------------------------------")
+print("COICOP 5 level")
+print("--------------------------------")
+#sorting by value of sales
+sample_sales<-dplyr::arrange(dplyr::summarise(dplyr::group_by(coffee, prodID), sales=sum(prices*quantities)), desc(sales))
+print("Sample with regard n highest sale values")
+s1<-sample_sales[1:n,]$prodID
+s1
+print(paste("Total value of sales: ", as.character(sum(sample_sales[1:n,]$sales))))
+print(paste("Share of sale values: ", as.character(sum(sample_sales[1:n,]$sales)/sum(coffee$prices*coffee$quantities))))
+#sorting by value of quantities
+sample_quantities<-dplyr::arrange(dplyr::summarise(dplyr::group_by(coffee, prodID), quantities=sum(quantities)), desc(quantities))
+print("--------------------------------")
+print("Sample with regard n highest number of sold products")
+s2<-sample_quantities[1:n,]$prodID
+s2
+print(paste("Total value of quantities: ", as.character(sum(sample_quantities[1:n,]$quantities))))
+print(paste("Share of value of quantities: ", as.character(sum(sample_quantities[1:n,]$quantities)/sum(coffee$quantities))))
+
+#common part of these two samples:
+print("Common part of these two samples")
+intersect(s1, s2)
+print("--------------------------------")
+
+#COICOP 6 level
+print("COICOP 6 level")
+print("--------------------------------")
+subpopulations<-split(coffee, f=coffee$description)
+coffee_beans<-subpopulations[[1]] 
+ground_coffee<-subpopulations[[2]]
+instant_coffee<-subpopulations[[3]]
+
+print("coffee beans")
+print("--------------------------------")
+sample_sales1<-dplyr::arrange(dplyr::summarise(dplyr::group_by(coffee_beans, prodID), sales=sum(prices*quantities)), desc(sales))
+print("Sample with regard n/3 highest sale values")
+s1_1<-sample_sales1[1:3,]$prodID
+s1_1
+print(paste("Total value of sales: ", as.character(sum(sample_sales1[1:3,]$sales))))
+print(paste("Share of sale values: ", as.character(sum(sample_sales1[1:3,]$sales)/sum(coffee_beans$prices*coffee_beans$quantities))))
+
+sample_quantities1<-dplyr::arrange(dplyr::summarise(dplyr::group_by(coffee_beans, prodID), quantities=sum(quantities)), desc(quantities))
+print("--------------------------------")
+print("Sample with regard n/3 highest number of sold products")
+s2_1<-sample_quantities1[1:3,]$prodID
+s2_1
+print(paste("Total value of quantities: ", as.character(sum(sample_quantities1[1:3,]$quantities))))
+print(paste("Share of value of quantities: ", as.character(sum(sample_quantities1[1:3,]$quantities)/sum(coffee_beans$quantities))))
+
+#common part of these two samples:
+print("Common part of these two samples")
+intersect(s1_1, s2_1)
+
+print("--------------------------------")
+print("ground coffee")
+print("--------------------------------")
+sample_sales2<-dplyr::arrange(dplyr::summarise(dplyr::group_by(ground_coffee, prodID), sales=sum(prices*quantities)), desc(sales))
+print("Sample with regard n/3 highest sale values")
+s1_2<-sample_sales2[1:3,]$prodID
+s1_2
+print(paste("Total value of sales: ", as.character(sum(sample_sales2[1:3,]$sales))))
+print(paste("Share of sale values: ", as.character(sum(sample_sales2[1:3,]$sales)/sum(ground_coffee$prices*ground_coffee$quantities))))
+
+sample_quantities2<-dplyr::arrange(dplyr::summarise(dplyr::group_by(ground_coffee, prodID), quantities=sum(quantities)), desc(quantities))
+print("--------------------------------")
+print("Sample with regard n/3 highest number of sold products")
+s2_2<-sample_quantities2[1:3,]$prodID
+s2_2
+print(paste("Total value of quantities: ", as.character(sum(sample_quantities2[1:3,]$quantities))))
+print(paste("Share of value of quantities: ", as.character(sum(sample_quantities2[1:3,]$quantities)/sum(ground_coffee$quantities))))
+
+#common part of these two samples:
+print("Common part of these two samples")
+intersect(s1_2, s2_2)
+
+print("--------------------------------")
+print("instant coffee")
+print("--------------------------------")
+sample_sales3<-dplyr::arrange(dplyr::summarise(dplyr::group_by(instant_coffee, prodID), sales=sum(prices*quantities)), desc(sales))
+print("Sample with regard n/3 highest sale values")
+s1_3<-sample_sales3[1:3,]$prodID
+s1_3
+print(paste("Total value of sales: ", as.character(sum(sample_sales3[1:3,]$sales))))
+print(paste("Share of sale values: ", as.character(sum(sample_sales3[1:3,]$sales)/sum(instant_coffee$prices*instant_coffee$quantities))))
+
+sample_quantities3<-dplyr::arrange(dplyr::summarise(dplyr::group_by(instant_coffee, prodID), quantities=sum(quantities)), desc(quantities))
+print("--------------------------------")
+print("Sample with regard n/3 highest number of sold products")
+s2_3<-sample_quantities3[1:3,]$prodID
+s2_3
+print(paste("Total value of quantities: ", as.character(sum(sample_quantities3[1:3,]$quantities))))
+print(paste("Share of value of quantities: ", as.character(sum(sample_quantities3[1:3,]$quantities)/sum(instant_coffee$quantities))))
+
+#common part of these two samples:
+print("Common part of these two samples")
+intersect(s1_3, s2_3)
+
+print("--------------------------------")
+print("COICOP 6 summary")
+print("--------------------------------")
+print("The whole sample with regard to n highest sale values")
+c(s1_1,s1_2,s1_3)
+whole1<-dplyr::filter(coffee, prodID %in% c(s1_1,s1_2,s1_3))
+print(paste("Total value of sales: ", as.character(sum(whole1$prices*whole1$quantities))))
+print(paste("Share of sale values: ", as.character(sum(sum(whole1$prices*whole1$quantities))/sum(coffee$prices*coffee$quantities))))
+print("--------------------------------")
+print("Sample with regard n highest number of sold products")
+c(s2_1,s2_2,s2_3)
+whole2<-dplyr::filter(coffee, prodID %in% c(s2_1,s2_2,s2_3))
+print(paste("Total value of quantities: ", as.character(sum(whole2$quantities))))
+print(paste("Share of value of quantities: ", as.character(sum(whole2$quantities)/sum(coffee$quantities))))
+print("Common part of these two samples")
+intersect(c(s1_1,s1_2,s1_3), c(s2_1,s2_2,s2_3))
+```
+
+
+```{r}
+#figures
+library("ggplot2")
+df<-data.frame(quantities=sample_quantities$quantities/1000, sales=sample_sales$sales/1000000)
+fig_sales<-ggplot(df, aes(x=sales)) + geom_histogram(color="black", fill="grey", bins=18)+labs(title="COICOP 5",x="value of sales (in millions of PLN)", y = "number of product IDs")
+
+fig_quantities<-ggplot(df, aes(x=quantities)) + geom_histogram(color="black", fill="grey", bins=18)+labs(title="COICOP 5",x="number of products sold (in thousands)", y = "number of product IDs")
+
+#coffee beans
+df1<-data.frame(quantities=sample_quantities1$quantities/1000, sales=sample_sales1$sales/1000000)
+fig_sales1<-ggplot(df1, aes(x=sales)) + geom_histogram(color="black", fill="grey", bins=18)+labs(title="COICOP 6 (coffee beans)",x="value of sales (in millions of PLN)", y = "number of product IDs")
+
+fig_quantities1<-ggplot(df1, aes(x=quantities)) + geom_histogram(color="black", fill="grey", bins=18)+labs(title="COICOP 6 (coffee beans)",x="number of products sold (in thousands)", y = "number of product IDs")
+
+#ground coffee
+df2<-data.frame(quantities=sample_quantities2$quantities/1000, sales=sample_sales2$sales/1000000)
+fig_sales2<-ggplot(df2, aes(x=sales)) + geom_histogram(color="black", fill="grey", bins=18)+labs(title="COICOP 6 (ground coffee)",x="value of sales (in millions of PLN)", y = "number of product IDs")
+
+fig_quantities2<-ggplot(df2, aes(x=quantities)) + geom_histogram(color="black", fill="grey", bins=18)+labs(title="COICOP 6 (ground coffee)",x="number of products sold (in thousands)", y = "number of product IDs")
+
+#instant coffee
+df3<-data.frame(quantities=sample_quantities3$quantities/1000, sales=sample_sales3$sales/1000000)
+fig_sales3<-ggplot(df3, aes(x=sales)) + geom_histogram(color="black", fill="grey", bins=18)+labs(title="COICOP 6 (instant coffee)",x="value of sales (in millions of PLN)", y = "number of product IDs")
+
+fig_quantities3<-ggplot(df3, aes(x=quantities)) + geom_histogram(color="black", fill="grey", bins=18)+labs(title="COICOP 6 (ground coffee)",x="number of products sold (in thousands)", y = "number of product IDs")
+
+
+library("ggpubr")
+figure1 <- ggarrange(fig_sales, 
+                    ggarrange(fig_sales1,fig_sales2,fig_sales3,legend="none",ncol = 3, nrow = 1), 
+                    common.legend = TRUE,
+                    legend=c("bottom"),
+                    ncol = 1, nrow = 2)
+figure1
+figure2 <- ggarrange(fig_quantities, 
+                    ggarrange(fig_quantities1,fig_quantities2,fig_quantities3, legend="none",ncol = 3, nrow = 1),
+                    common.legend = TRUE,
+                    legend=c("bottom"),
+                    ncol = 1, nrow = 2)
+figure2
+ggsave(plot = figure1, file = "figure1.pdf", width = 12, height = 8)
+ggsave(plot = figure2, file = "figure2.pdf", width = 12, height = 8)
+```
+
+
