@@ -1,0 +1,327 @@
+
+
+```{r}
+library("PriceIndices")
+set.seed(150)
+
+
+#data reduction to the year 2019:
+milk.<-dplyr::filter(milk, time==as.Date("2018-12-01") | time==as.Date("2019-12-01"))
+prodID<-matched(milk., period1="2018-12", period2="2019-12")
+N<-length(prodID)
+
+
+#population elementary indices
+population_indices<-c(
+dutot(milk., start="2018-12", end="2019-12"),
+carli(milk., start="2018-12", end="2019-12"),
+jevons(milk., start="2018-12", end="2019-12"),
+bmw(milk., start="2018-12", end="2019-12"),
+#population weighted indices
+laspeyres(milk., start="2018-12", end="2019-12"),
+paasche(milk., start="2018-12", end="2019-12"),
+fisher(milk., start="2018-12", end="2019-12"),
+tornqvist(milk., start="2018-12", end="2019-12"),
+walsh(milk., start="2018-12", end="2019-12")
+)
+
+
+#cut-off sampling
+#n=10
+n=10
+sample_sales<-dplyr::arrange(dplyr::summarise(dplyr::group_by(milk., prodID), sales=sum(prices*quantities)), desc(sales))
+sample<-sample_sales[1:n,]$prodID
+df<-dplyr::filter(milk., prodID %in% sample)
+
+
+# sample elementary indices
+cut_off_10<-c(dutot(df, start="2018-12", end="2019-12"),
+carli(df, start="2018-12", end="2019-12"),
+jevons(df, start="2018-12", end="2019-12"),
+bmw(df, start="2018-12", end="2019-12"),
+# sample population indices
+laspeyres(df, start="2018-12", end="2019-12"),
+paasche(df, start="2018-12", end="2019-12"),
+fisher(df, start="2018-12", end="2019-12"),
+tornqvist(df, start="2018-12", end="2019-12"),
+walsh(df, start="2018-12", end="2019-12")
+)
+
+#n=20
+n=20
+sample_sales<-dplyr::arrange(dplyr::summarise(dplyr::group_by(milk., prodID), sales=sum(prices*quantities)), desc(sales))
+sample<-sample_sales[1:n,]$prodID
+df<-dplyr::filter(milk., prodID %in% sample)
+
+
+# sample elementary indices
+cut_off_20<-c(dutot(df, start="2018-12", end="2019-12"),
+carli(df, start="2018-12", end="2019-12"),
+jevons(df, start="2018-12", end="2019-12"),
+bmw(df, start="2018-12", end="2019-12"),
+# sample population indices
+laspeyres(df, start="2018-12", end="2019-12"),
+paasche(df, start="2018-12", end="2019-12"),
+fisher(df, start="2018-12", end="2019-12"),
+tornqvist(df, start="2018-12", end="2019-12"),
+walsh(df, start="2018-12", end="2019-12")
+)
+
+#n=30
+n=30
+sample_sales<-dplyr::arrange(dplyr::summarise(dplyr::group_by(milk., prodID), sales=sum(prices*quantities)), desc(sales))
+sample<-sample_sales[1:n,]$prodID
+df<-dplyr::filter(milk., prodID %in% sample)
+
+# sample elementary indices
+cut_off_30<-c(
+dutot(df, start="2018-12", end="2019-12"),
+carli(df, start="2018-12", end="2019-12"),
+jevons(df, start="2018-12", end="2019-12"),
+bmw(df, start="2018-12", end="2019-12"),
+# sample population indices
+laspeyres(df, start="2018-12", end="2019-12"),
+paasche(df, start="2018-12", end="2019-12"),
+fisher(df, start="2018-12", end="2019-12"),
+tornqvist(df, start="2018-12", end="2019-12"),
+walsh(df, start="2018-12", end="2019-12")
+)
+
+#simple sampling
+#n=10
+n=10
+simple_10<-c()
+dutot_simple_10<-c()
+carli_simple_10<-c()
+jevons_simple_10<-c()
+bmw_simple_10<-c()
+laspeyres_simple_10<-c()
+paasche_simple_10<-c()
+fisher_simple_10<-c()
+tornqvist_simple_10<-c()
+walsh_simple_10<-c()
+
+for (i in 1:200) {
+  simple_sampling<-sample(N, size = n, replace = TRUE, prob = NULL)
+  sample<-prodID[simple_sampling]
+  df<-dplyr::filter(milk., prodID %in% sample)
+  dutot_simple_10<-c(dutot_simple_10,dutot(df, start="2018-12", end="2019-12"))
+  carli_simple_10<-c(carli_simple_10,carli(df, start="2018-12", end="2019-12"))
+  jevons_simple_10<-c(jevons_simple_10,jevons(df, start="2018-12", end="2019-12"))
+  bmw_simple_10<-c(bmw_simple_10,bmw(df, start="2018-12", end="2019-12"))
+  laspeyres_simple_10<-c(laspeyres_simple_10,laspeyres(df, start="2018-12", end="2019-12"))
+  paasche_simple_10<-c(paasche_simple_10,paasche(df, start="2018-12", end="2019-12"))
+  fisher_simple_10<-c(fisher_simple_10,fisher(df, start="2018-12", end="2019-12"))
+  tornqvist_simple_10<-c(tornqvist_simple_10,tornqvist(df, start="2018-12", end="2019-12"))
+  walsh_simple_10<-c(walsh_simple_10,walsh(df, start="2018-12", end="2019-12"))
+  }
+simple_10<-c(mean(dutot_simple_10),mean(carli_simple_10),mean(jevons_simple_10),mean(bmw_simple_10),mean(laspeyres_simple_10),mean(paasche_simple_10),mean(fisher_simple_10),mean(tornqvist_simple_10),mean(walsh_simple_10))
+
+simple_10_sd<-c(sd(dutot_simple_10),sd(carli_simple_10),sd(jevons_simple_10),sd(bmw_simple_10),sd(laspeyres_simple_10),sd(paasche_simple_10),sd(fisher_simple_10),sd(tornqvist_simple_10),sd(walsh_simple_10))
+
+#n=20
+n=20
+simple_20<-c()
+dutot_simple_20<-c()
+carli_simple_20<-c()
+jevons_simple_20<-c()
+bmw_simple_20<-c()
+laspeyres_simple_20<-c()
+paasche_simple_20<-c()
+fisher_simple_20<-c()
+tornqvist_simple_20<-c()
+walsh_simple_20<-c()
+
+for (i in 1:200) {
+  simple_sampling<-sample(N, size = n, replace = TRUE, prob = NULL)
+  sample<-prodID[simple_sampling]
+  df<-dplyr::filter(milk., prodID %in% sample)
+  dutot_simple_20<-c(dutot_simple_20,dutot(df, start="2018-12", end="2019-12"))
+  carli_simple_20<-c(carli_simple_20,carli(df, start="2018-12", end="2019-12"))
+  jevons_simple_20<-c(jevons_simple_20,jevons(df, start="2018-12", end="2019-12"))
+  bmw_simple_20<-c(bmw_simple_20,bmw(df, start="2018-12", end="2019-12"))
+  laspeyres_simple_20<-c(laspeyres_simple_20,laspeyres(df, start="2018-12", end="2019-12"))
+  paasche_simple_20<-c(paasche_simple_20,paasche(df, start="2018-12", end="2019-12"))
+  fisher_simple_20<-c(fisher_simple_20,fisher(df, start="2018-12", end="2019-12"))
+  tornqvist_simple_20<-c(tornqvist_simple_20,tornqvist(df, start="2018-12", end="2019-12"))
+  walsh_simple_20<-c(walsh_simple_20,walsh(df, start="2018-12", end="2019-12"))
+  }
+simple_20<-c(mean(dutot_simple_20),mean(carli_simple_20),mean(jevons_simple_20),mean(bmw_simple_20),mean(laspeyres_simple_20),mean(paasche_simple_20),mean(fisher_simple_20),mean(tornqvist_simple_20),mean(walsh_simple_20))
+
+simple_20_sd<-c(sd(dutot_simple_20),sd(carli_simple_20),sd(jevons_simple_20),sd(bmw_simple_20),sd(laspeyres_simple_20),sd(paasche_simple_20),sd(fisher_simple_20),sd(tornqvist_simple_20),sd(walsh_simple_20))
+
+#n=30
+n=30
+simple_30<-c()
+dutot_simple_30<-c()
+carli_simple_30<-c()
+jevons_simple_30<-c()
+bmw_simple_30<-c()
+laspeyres_simple_30<-c()
+paasche_simple_30<-c()
+fisher_simple_30<-c()
+tornqvist_simple_30<-c()
+walsh_simple_30<-c()
+
+for (i in 1:200) {
+  simple_sampling<-sample(N, size = n, replace = TRUE, prob = NULL)
+  sample<-prodID[simple_sampling]
+  df<-dplyr::filter(milk., prodID %in% sample)
+  dutot_simple_30<-c(dutot_simple_30,dutot(df, start="2018-12", end="2019-12"))
+  carli_simple_30<-c(carli_simple_30,carli(df, start="2018-12", end="2019-12"))
+  jevons_simple_30<-c(jevons_simple_30,jevons(df, start="2018-12", end="2019-12"))
+  bmw_simple_30<-c(bmw_simple_30,bmw(df, start="2018-12", end="2019-12"))
+  laspeyres_simple_30<-c(laspeyres_simple_30,laspeyres(df, start="2018-12", end="2019-12"))
+  paasche_simple_30<-c(paasche_simple_30,paasche(df, start="2018-12", end="2019-12"))
+  fisher_simple_30<-c(fisher_simple_30,fisher(df, start="2018-12", end="2019-12"))
+  tornqvist_simple_30<-c(tornqvist_simple_30,tornqvist(df, start="2018-12", end="2019-12"))
+  walsh_simple_30<-c(walsh_simple_30,walsh(df, start="2018-12", end="2019-12"))
+  }
+simple_30<-c(mean(dutot_simple_30),mean(carli_simple_30),mean(jevons_simple_30),mean(bmw_simple_30),mean(laspeyres_simple_30),mean(paasche_simple_30),mean(fisher_simple_30),mean(tornqvist_simple_30),mean(walsh_simple_30))
+
+simple_30_sd<-c(sd(dutot_simple_30),sd(carli_simple_30),sd(jevons_simple_30),sd(bmw_simple_30),sd(laspeyres_simple_30),sd(paasche_simple_30),sd(fisher_simple_30),sd(tornqvist_simple_30),sd(walsh_simple_30))
+
+#pps sampling
+wagi<-expenditures(milk., period="2018-12", set=prodID)
+wagi<-wagi/sum(wagi)
+
+#n=10
+n=10
+pps_10<-c()
+dutot_pps_10<-c()
+carli_pps_10<-c()
+jevons_pps_10<-c()
+bmw_pps_10<-c()
+laspeyres_pps_10<-c()
+paasche_pps_10<-c()
+fisher_pps_10<-c()
+tornqvist_pps_10<-c()
+walsh_pps_10<-c()
+
+for (i in 1:200) {
+  pps_sampling<-sample(N, size = n, replace = TRUE, prob = wagi)
+  sample<-prodID[pps_sampling]
+  df<-dplyr::filter(milk., prodID %in% sample)
+  dutot_pps_10<-c(dutot_pps_10,dutot(df, start="2018-12", end="2019-12"))
+  carli_pps_10<-c(carli_pps_10,carli(df, start="2018-12", end="2019-12"))
+  jevons_pps_10<-c(jevons_pps_10,jevons(df, start="2018-12", end="2019-12"))
+  bmw_pps_10<-c(bmw_pps_10,bmw(df, start="2018-12", end="2019-12"))
+  laspeyres_pps_10<-c(laspeyres_pps_10,laspeyres(df, start="2018-12", end="2019-12"))
+  paasche_pps_10<-c(paasche_pps_10,paasche(df, start="2018-12", end="2019-12"))
+  fisher_pps_10<-c(fisher_pps_10,fisher(df, start="2018-12", end="2019-12"))
+  tornqvist_pps_10<-c(tornqvist_pps_10,tornqvist(df, start="2018-12", end="2019-12"))
+  walsh_pps_10<-c(walsh_pps_10,walsh(df, start="2018-12", end="2019-12"))
+  }
+pps_10<-c(mean(dutot_pps_10),mean(carli_pps_10),mean(jevons_pps_10),mean(bmw_pps_10),mean(laspeyres_pps_10),mean(paasche_pps_10),mean(fisher_pps_10),mean(tornqvist_pps_10),mean(walsh_pps_10))
+
+pps_10_sd<-c(sd(dutot_pps_10),sd(carli_pps_10),sd(jevons_pps_10),sd(bmw_pps_10),sd(laspeyres_pps_10),sd(paasche_pps_10),sd(fisher_pps_10),sd(tornqvist_pps_10),sd(walsh_pps_10))
+
+#n=20
+n=20
+pps_20<-c()
+dutot_pps_20<-c()
+carli_pps_20<-c()
+jevons_pps_20<-c()
+bmw_pps_20<-c()
+laspeyres_pps_20<-c()
+paasche_pps_20<-c()
+fisher_pps_20<-c()
+tornqvist_pps_20<-c()
+walsh_pps_20<-c()
+
+for (i in 1:200) {
+  pps_sampling<-sample(N, size = n, replace = TRUE, prob = wagi)
+  sample<-prodID[pps_sampling]
+  df<-dplyr::filter(milk., prodID %in% sample)
+  dutot_pps_20<-c(dutot_pps_20,dutot(df, start="2018-12", end="2019-12"))
+  carli_pps_20<-c(carli_pps_20,carli(df, start="2018-12", end="2019-12"))
+  jevons_pps_20<-c(jevons_pps_20,jevons(df, start="2018-12", end="2019-12"))
+  bmw_pps_20<-c(bmw_pps_20,bmw(df, start="2018-12", end="2019-12"))
+  laspeyres_pps_20<-c(laspeyres_pps_20,laspeyres(df, start="2018-12", end="2019-12"))
+  paasche_pps_20<-c(paasche_pps_20,paasche(df, start="2018-12", end="2019-12"))
+  fisher_pps_20<-c(fisher_pps_20,fisher(df, start="2018-12", end="2019-12"))
+  tornqvist_pps_20<-c(tornqvist_pps_20,tornqvist(df, start="2018-12", end="2019-12"))
+  walsh_pps_20<-c(walsh_pps_20,walsh(df, start="2018-12", end="2019-12"))
+  }
+pps_20<-c(mean(dutot_pps_20),mean(carli_pps_20),mean(jevons_pps_20),mean(bmw_pps_20),mean(laspeyres_pps_20),mean(paasche_pps_20),mean(fisher_pps_20),mean(tornqvist_pps_20),mean(walsh_pps_20))
+
+pps_20_sd<-c(sd(dutot_pps_20),sd(carli_pps_20),sd(jevons_pps_20),sd(bmw_pps_20),sd(laspeyres_pps_20),sd(paasche_pps_20),sd(fisher_pps_20),sd(tornqvist_pps_20),sd(walsh_pps_20))
+
+#n=30
+n=30
+pps_30<-c()
+dutot_pps_30<-c()
+carli_pps_30<-c()
+jevons_pps_30<-c()
+bmw_pps_30<-c()
+laspeyres_pps_30<-c()
+paasche_pps_30<-c()
+fisher_pps_30<-c()
+tornqvist_pps_30<-c()
+walsh_pps_30<-c()
+
+for (i in 1:200) {
+  pps_sampling<-sample(N, size = n, replace = TRUE, prob = wagi)
+  sample<-prodID[pps_sampling]
+  df<-dplyr::filter(milk., prodID %in% sample)
+  dutot_pps_30<-c(dutot_pps_30,dutot(df, start="2018-12", end="2019-12"))
+  carli_pps_30<-c(carli_pps_30,carli(df, start="2018-12", end="2019-12"))
+  jevons_pps_30<-c(jevons_pps_30,jevons(df, start="2018-12", end="2019-12"))
+  bmw_pps_30<-c(bmw_pps_30,bmw(df, start="2018-12", end="2019-12"))
+  laspeyres_pps_30<-c(laspeyres_pps_30,laspeyres(df, start="2018-12", end="2019-12"))
+  paasche_pps_30<-c(paasche_pps_30,paasche(df, start="2018-12", end="2019-12"))
+  fisher_pps_30<-c(fisher_pps_30,fisher(df, start="2018-12", end="2019-12"))
+  tornqvist_pps_30<-c(tornqvist_pps_30,tornqvist(df, start="2018-12", end="2019-12"))
+  walsh_pps_30<-c(walsh_pps_30,walsh(df, start="2018-12", end="2019-12"))
+  }
+pps_30<-c(mean(dutot_pps_30),mean(carli_pps_30),mean(jevons_pps_30),mean(bmw_pps_30),mean(laspeyres_pps_30),mean(paasche_pps_30),mean(fisher_pps_30),mean(tornqvist_pps_30),mean(walsh_pps_30))
+
+pps_30_sd<-c(sd(dutot_pps_30),sd(carli_pps_30),sd(jevons_pps_30),sd(bmw_pps_30),sd(laspeyres_pps_30),sd(paasche_pps_30),sd(fisher_pps_30),sd(tornqvist_pps_30),sd(walsh_pps_30))
+
+
+table1<-data.frame(indeks=c("Dutot","Carli","Jevons","BMW","Laspeyres","Paasche","Fisher","Tornqvist","Walsh"),
+                   population_indices=population_indices,
+                   cut_off_10=cut_off_10,
+                   cut_off_20=cut_off_20,
+                   cut_off_30=cut_off_30,
+                   simple_10=simple_10,
+                   simple_20=simple_20,
+                   simple_30=simple_30,
+                   pps_10=pps_10,
+                   pps_20=pps_20,
+                   pps_30=pps_30
+                   )
+table1
+#library('xtable')
+#xtable(table1, digits=6)
+
+
+#differences
+table2<-data.frame(indeks=c("Dutot","Carli","Jevons","BMW","Laspeyres","Paasche","Fisher","Tornqvist","Walsh"),
+                   cut_off_10=cut_off_10-population_indices,
+                   cut_off_20=cut_off_20-population_indices,
+                   cut_off_30=cut_off_30-population_indices,
+                   simple_10=simple_10-population_indices,
+                   simple_20=simple_20-population_indices,
+                   simple_30=simple_30-population_indices,
+                   pps_10=pps_10-population_indices,
+                   pps_20=pps_20-population_indices,
+                   pps_30=pps_30-population_indices
+                   )
+table2
+#library('xtable')
+#xtable(table2, digits=6)
+
+table3<-data.frame(indeks=c("Dutot","Carli","Jevons","BMW","Laspeyres","Paasche","Fisher","Tornqvist","Walsh"),
+                   simple_10_sd=simple_10_sd,
+                   simple_20_sd=simple_20_sd,
+                   simple_30_sd=simple_30_sd,
+                   pps_10_sd=pps_10_sd,
+                   pps_20_sd=pps_20_sd,
+                   pps_30_sd=pps_30_sd)
+table3
+#library('xtable')
+#xtable(table3, digits=6)
+```
+
+
