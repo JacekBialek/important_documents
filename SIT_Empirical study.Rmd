@@ -1,0 +1,139 @@
+
+
+```{r}
+library("PriceIndices")
+data<-readRDS("data.rds")
+```
+
+
+```{r}
+start.<-"2022-12"
+end.<-"2023-12"
+#matching products over time
+data<-data_matching(data, start=start., end=end., codeIN=TRUE,codeOUT=TRUE,description=TRUE, onlydescription=FALSE,precision=0.995,interval=TRUE)
+
+#data filter variants:
+case<-c("v1","v2","v3","v4","v5","v6","v7","v8","v9","v10","v11")
+
+v1<-data
+
+v2<-data_filtering(v1, start=start.,end=end.,filters=c("lowsales") ,lambda=1.25, interval=TRUE)
+
+v3<-data_filtering(v1, start=start.,end=end.,filters=c("extremeprices") ,plimits=c(0.25,3), interval=TRUE)
+
+v4<-data_filtering(v1, start=start.,end=end.,filters=c("dumpprices") ,dplimits=c(0.25,0.3), interval=TRUE)
+
+v5<-data_filtering(v1, start=start.,end=end.,filters=c("lowsales","extremeprices","dumpprices") ,lambda=1.25,plimits=c(0.25,3),dplimits=c(0.25,0.3), interval=TRUE)
+
+v6<-v2
+v6<-data_filtering(v6, start=start.,end=end.,filters=c("extremeprices") ,plimits=c(0.25,3), interval=TRUE)
+v6<-data_filtering(v6, start=start.,end=end.,filters=c("dumpprices") ,dplimits=c(0.25,0.3), interval=TRUE)
+
+v7<-v2
+v7<-data_filtering(v7, start=start.,end=end.,filters=c("dumpprices") ,dplimits=c(0.25,0.3), interval=TRUE)
+v7<-data_filtering(v7, start=start.,end=end.,filters=c("extremeprices") ,plimits=c(0.25,3), interval=TRUE)
+
+v8<-v3
+v8<-data_filtering(v8, start=start.,end=end.,filters=c("lowsales") ,lambda=1.25, interval=TRUE)
+v8<-data_filtering(v8, start=start.,end=end.,filters=c("dumpprices") ,dplimits=c(0.25,0.3), interval=TRUE)
+
+
+v9<-v3
+v9<-data_filtering(v9, start=start.,end=end.,filters=c("dumpprices") ,dplimits=c(0.25,0.3), interval=TRUE)
+v9<-data_filtering(v9, start=start.,end=end.,filters=c("lowsales") ,lambda=1.25, interval=TRUE)
+
+v10<-v4
+v10<-data_filtering(v10, start=start.,end=end.,filters=c("lowsales") ,lambda=1.25, interval=TRUE)
+v10<-data_filtering(v10, start=start.,end=end.,filters=c("extremeprices") ,plimits=c(0.25,3), interval=TRUE)
+
+v11<-v4
+v11<-data_filtering(v11, start=start.,end=end.,filters=c("extremeprices") ,plimits=c(0.25,3), interval=TRUE)
+v11<-data_filtering(v11, start=start.,end=end.,filters=c("lowsales") ,lambda=1.25, interval=TRUE)
+
+
+#sample_size
+sample_size<-c(length(unique(v1$prodID)),length(unique(v2$prodID)),length(unique(v3$prodID)),length(unique(v4$prodID)),length(unique(v5$prodID)),length(unique(v6$prodID)),length(unique(v7$prodID)),length(unique(v8$prodID)),length(unique(v9$prodID)),length(unique(v10$prodID)),length(unique(v11$prodID)))
+
+sample_size_normalized<-sample_size*100/sample_size[1]
+
+#indices
+chain_Jevons<-c(chjevons(v1, start., end., interval=FALSE),
+                chjevons(v2, start., end., interval=FALSE),
+                chjevons(v3, start., end., interval=FALSE),
+                chjevons(v4, start., end., interval=FALSE),
+                chjevons(v5, start., end., interval=FALSE),
+                chjevons(v6, start., end., interval=FALSE),
+                chjevons(v7, start., end., interval=FALSE),
+                chjevons(v8, start., end., interval=FALSE),
+                chjevons(v9, start., end., interval=FALSE),
+                chjevons(v10, start., end., interval=FALSE),
+                chjevons(v11, start., end., interval=FALSE)
+                )
+
+gk<-c(gk(v1, start., end.),
+                gk(v2, start., end.),
+                gk(v3, start., end.),
+                gk(v4, start., end.),
+                gk(v5, start., end.),
+                gk(v6, start., end.),
+                gk(v7, start., end.),
+                gk(v8, start., end.),
+                gk(v9, start., end.),
+                gk(v10, start., end.),
+                gk(v11, start., end.)
+                )
+
+geks<-c(geks(v1, start., end.),
+                geks(v2, start., end.),
+                geks(v3, start., end.),
+                geks(v4, start., end.),
+                geks(v5, start., end.),
+                geks(v6, start., end.),
+                geks(v7, start., end.),
+                geks(v8, start., end.),
+                geks(v9, start., end.),
+                geks(v10, start., end.),
+                geks(v11, start., end.)
+                )
+
+ccdi<-c(ccdi(v1, start., end.),
+                ccdi(v2, start., end.),
+                ccdi(v3, start., end.),
+                ccdi(v4, start., end.),
+                ccdi(v5, start., end.),
+                ccdi(v6, start., end.),
+                ccdi(v7, start., end.),
+                ccdi(v8, start., end.),
+                ccdi(v9, start., end.),
+                ccdi(v10, start., end.),
+                ccdi(v11, start., end.)
+                )
+
+tpd<-c(tpd(v1, start., end.),
+                tpd(v2, start., end.),
+                tpd(v3, start., end.),
+                tpd(v4, start., end.),
+                tpd(v5, start., end.),
+                tpd(v6, start., end.),
+                tpd(v7, start., end.),
+                tpd(v8, start., end.),
+                tpd(v9, start., end.),
+                tpd(v10, start., end.),
+                tpd(v11, start., end.)
+                )
+
+df<-data.frame(sample_size = sample_size, 
+               sample_size_norm = sample_size_normalized,
+               chain_Jevons = chain_Jevons,
+               Geary_Khamis = gk,
+               GEKS = geks,
+               CCDI = ccdi,
+               TPD = tpd
+               )
+
+library('xtable')
+xtable(df, digits=5)
+
+
+```
+
