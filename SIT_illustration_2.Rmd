@@ -160,7 +160,7 @@ fig_quantities2<-ggplot(df2, aes(x=quantities)) + geom_histogram(color="black", 
 df3<-data.frame(quantities=sample_quantities3$quantities/1000, sales=sample_sales3$sales/1000000)
 fig_sales3<-ggplot(df3, aes(x=sales)) + geom_histogram(color="black", fill="grey", bins=18)+labs(title="COICOP 6 (instant coffee)",x="value of sales (in millions of PLN)", y = "number of product IDs")
 
-fig_quantities3<-ggplot(df3, aes(x=quantities)) + geom_histogram(color="black", fill="grey", bins=18)+labs(title="COICOP 6 (ground coffee)",x="number of products sold (in thousands)", y = "number of product IDs")
+fig_quantities3<-ggplot(df3, aes(x=quantities)) + geom_histogram(color="black", fill="grey", bins=18)+labs(title="COICOP 6 (instant coffee)",x="number of products sold (in thousands)", y = "number of product IDs")
 
 
 library("ggpubr")
