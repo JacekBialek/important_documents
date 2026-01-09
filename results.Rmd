@@ -1,0 +1,475 @@
+```{r}
+library("PriceIndices")
+library("dplyr")
+library('xtable')
+
+dataRSM$prodID<-dataRSM$EAN_code
+dataRSM$subcategory<-tolower(dataRSM$subcategory)
+start.<-"2024-12"
+end.<-"2025-12"
+matched_products<-matched(dataRSM, period1=start., period2=end., interval=TRUE)
+dataRSM<-dplyr::filter(dataRSM, prodID %in% matched_products)
+dataRSM<-dplyr::select(dataRSM,time, prices, quantities, prodID, subcategory)
+data_list<-split(dataRSM, f=dataRSM$subcategory)
+length(data_list)
+names(data_list)
+
+data_aggregated<-dataRSM
+data_aggregated$prodID<-data_aggregated$subcategory
+```
+
+```{r}
+data<-data_list[[6]]
+unique(data$subcategory)
+sigma.<-elasticity(data, start=start., end=end., method="f")
+
+
+index_Fisher<-price_indices(data, start=start., end=end.,formula="fisher", interval=TRUE)
+index_Laspeyres<-price_indices(data, start=start., end=end.,formula="laspeyres", interval=TRUE)
+indeks_Lloyd_Moulton<-price_indices(data, start=start., end=end.,formula="lloyd_moulton", sigma=sigma., interval=TRUE)
+
+cor_dhkh<-retro_index(data, start=start.,end=end.,formula="dhkh", name="DHKH",df=TRUE)
+
+#CES-imputation approach
+CES_imp<-retro_index(data, start=start.,end=end., approach="CES-imputation", 
+sigma=sigma., name="CES_imp",df=TRUE)
+
+
+#correction approach
+cor_multi_lin<-retro_index(data, start=start.,end=end., approach="correction", 
+method_index = "multiplicative", lambda="linear", name="corr_multi_lin",df=TRUE)
+
+cor_multi_sin<-retro_index(data, start=start.,end=end., approach="correction", 
+method_index = "multiplicative", lambda="sinusoidal", name="corr_multi_sin",df=TRUE)
+
+cor_add_lin<-retro_index(data, start=start.,end=end., approach="correction", 
+method_index = "additive", lambda="linear", name="corr_add_lin",df=TRUE)
+
+cor_add_sin<-retro_index(data, start=start.,end=end., approach="correction", 
+method_index = "additive", lambda="sinusoidal", name="corr_add_sin",df=TRUE)
+
+#imputation approach
+imp_multi_lin<-retro_index(data, start=start.,end=end., approach="imputation", 
+method_weights = "multiplicative", lambda="linear", name="imp_multi_lin",df=TRUE)
+
+imp_multi_sin<-retro_index(data, start=start.,end=end., approach="imputation", 
+method_weights = "multiplicative", lambda="sinusoidal", name="imp_multi_sin",df=TRUE)
+
+imp_add_lin<-retro_index(data, start=start.,end=end., approach="imputation", 
+method_weights = "additive", lambda="linear", name="imp_add_lin",df=TRUE)
+
+imp_add_sin<-retro_index(data, start=start.,end=end., approach="imputation", 
+method_weights = "additive", lambda="sinusoidal", name="imp_add_sin",df=TRUE)
+
+#correction-imputation approach
+
+corr_imp_multi_multi_lin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "multiplicative", method_weights = "multiplicative", lambda="linear", name="corr_imp_multi_multi_lin",df=TRUE)
+
+corr_imp_multi_add_lin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "multiplicative", method_weights = "additive", lambda="linear", name="corr_imp_multi_add_lin",df=TRUE)
+
+corr_imp_add_multi_lin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "additive", method_weights = "multiplicative", lambda="linear", name="corr_imp_add_multi_lin",df=TRUE)
+
+corr_imp_add_add_lin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "additive", method_weights = "additive", lambda="linear", name="corr_imp_add_add_lin",df=TRUE)
+  
+corr_imp_multi_multi_sin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "multiplicative", method_weights = "multiplicative", lambda="sinusoidal", name="corr_imp_multi_multi_sin",df=TRUE)
+
+corr_imp_multi_add_sin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "multiplicative", method_weights = "additive", lambda="sinusoidal", name="corr_imp_multi_add_sin",df=TRUE)
+
+corr_imp_add_multi_sin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "additive", method_weights = "multiplicative", lambda="sinusoidal", name="corr_imp_add_multi_sin",df=TRUE)
+
+corr_imp_add_add_sin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "additive", method_weights = "additive", lambda="sinusoidal", name="corr_imp_add_add_sin",df=TRUE)  
+
+
+fig1<-compare_indices_list(data=list(index_Fisher,index_Laspeyres,indeks_Lloyd_Moulton,CES_imp,cor_dhkh,cor_multi_lin, cor_multi_sin, cor_add_lin, cor_add_sin,
+                                     imp_multi_lin,imp_multi_sin,imp_add_lin,imp_add_sin,
+                                     corr_imp_multi_multi_lin,corr_imp_multi_add_lin,corr_imp_add_multi_lin,corr_imp_add_add_lin,
+                                     corr_imp_multi_multi_sin,corr_imp_multi_add_sin,corr_imp_add_multi_sin,corr_imp_add_add_sin))
+fig1<-fig1+ggplot2::ggtitle(as.character(unique(data$subcategory)))
+
+comparison1<-compare_to_target(data=cbind(index_Laspeyres,indeks_Lloyd_Moulton,CES_imp,cor_dhkh,cor_multi_lin, cor_multi_sin, cor_add_lin, cor_add_sin,
+                                     imp_multi_lin,imp_multi_sin,imp_add_lin,imp_add_sin,
+                                     corr_imp_multi_multi_lin,corr_imp_multi_add_lin,corr_imp_add_multi_lin,corr_imp_add_add_lin,
+                                     corr_imp_multi_multi_sin,corr_imp_multi_add_sin,corr_imp_add_multi_sin,corr_imp_add_add_sin),
+                  target=index_Fisher
+                  )
+fig1
+results_df1<-dplyr::arrange(comparison1, distance)
+results_df1
+
+xtable(results_df1, digits=3)
+```
+
+```{r}
+data<-data_list[[3]]
+unique(data$subcategory)
+sigma.<-elasticity(data, start=start., end=end., method="f")
+
+
+index_Fisher<-price_indices(data, start=start., end=end.,formula="fisher", interval=TRUE)
+index_Laspeyres<-price_indices(data, start=start., end=end.,formula="laspeyres", interval=TRUE)
+indeks_Lloyd_Moulton<-price_indices(data, start=start., end=end.,formula="lloyd_moulton", sigma=sigma., interval=TRUE)
+
+cor_dhkh<-retro_index(data, start=start.,end=end.,formula="dhkh", name="DHKH",df=TRUE)
+
+#CES-imputation approach
+CES_imp<-retro_index(data, start=start.,end=end., approach="CES-imputation", 
+sigma=sigma., name="CES_imp",df=TRUE)
+
+
+#correction approach
+cor_multi_lin<-retro_index(data, start=start.,end=end., approach="correction", 
+method_index = "multiplicative", lambda="linear", name="corr_multi_lin",df=TRUE)
+
+cor_multi_sin<-retro_index(data, start=start.,end=end., approach="correction", 
+method_index = "multiplicative", lambda="sinusoidal", name="corr_multi_sin",df=TRUE)
+
+cor_add_lin<-retro_index(data, start=start.,end=end., approach="correction", 
+method_index = "additive", lambda="linear", name="corr_add_lin",df=TRUE)
+
+cor_add_sin<-retro_index(data, start=start.,end=end., approach="correction", 
+method_index = "additive", lambda="sinusoidal", name="corr_add_sin",df=TRUE)
+
+#imputation approach
+imp_multi_lin<-retro_index(data, start=start.,end=end., approach="imputation", 
+method_weights = "multiplicative", lambda="linear", name="imp_multi_lin",df=TRUE)
+
+imp_multi_sin<-retro_index(data, start=start.,end=end., approach="imputation", 
+method_weights = "multiplicative", lambda="sinusoidal", name="imp_multi_sin",df=TRUE)
+
+imp_add_lin<-retro_index(data, start=start.,end=end., approach="imputation", 
+method_weights = "additive", lambda="linear", name="imp_add_lin",df=TRUE)
+
+imp_add_sin<-retro_index(data, start=start.,end=end., approach="imputation", 
+method_weights = "additive", lambda="sinusoidal", name="imp_add_sin",df=TRUE)
+
+#correction-imputation approach
+
+corr_imp_multi_multi_lin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "multiplicative", method_weights = "multiplicative", lambda="linear", name="corr_imp_multi_multi_lin",df=TRUE)
+
+corr_imp_multi_add_lin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "multiplicative", method_weights = "additive", lambda="linear", name="corr_imp_multi_add_lin",df=TRUE)
+
+corr_imp_add_multi_lin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "additive", method_weights = "multiplicative", lambda="linear", name="corr_imp_add_multi_lin",df=TRUE)
+
+corr_imp_add_add_lin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "additive", method_weights = "additive", lambda="linear", name="corr_imp_add_add_lin",df=TRUE)
+  
+corr_imp_multi_multi_sin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "multiplicative", method_weights = "multiplicative", lambda="sinusoidal", name="corr_imp_multi_multi_sin",df=TRUE)
+
+corr_imp_multi_add_sin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "multiplicative", method_weights = "additive", lambda="sinusoidal", name="corr_imp_multi_add_sin",df=TRUE)
+
+corr_imp_add_multi_sin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "additive", method_weights = "multiplicative", lambda="sinusoidal", name="corr_imp_add_multi_sin",df=TRUE)
+
+corr_imp_add_add_sin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "additive", method_weights = "additive", lambda="sinusoidal", name="corr_imp_add_add_sin",df=TRUE)  
+
+
+fig2<-compare_indices_list(data=list(index_Fisher,index_Laspeyres,indeks_Lloyd_Moulton,CES_imp,cor_dhkh,cor_multi_lin, cor_multi_sin, cor_add_lin, cor_add_sin,
+                                     imp_multi_lin,imp_multi_sin,imp_add_lin,imp_add_sin,
+                                     corr_imp_multi_multi_lin,corr_imp_multi_add_lin,corr_imp_add_multi_lin,corr_imp_add_add_lin,
+                                     corr_imp_multi_multi_sin,corr_imp_multi_add_sin,corr_imp_add_multi_sin,corr_imp_add_add_sin))
+fig2<-fig2+ggplot2::ggtitle(as.character(unique(data$subcategory)))
+
+comparison2<-compare_to_target(data=cbind(index_Laspeyres,indeks_Lloyd_Moulton,CES_imp,cor_dhkh,cor_multi_lin, cor_multi_sin, cor_add_lin, cor_add_sin,
+                                     imp_multi_lin,imp_multi_sin,imp_add_lin,imp_add_sin,
+                                     corr_imp_multi_multi_lin,corr_imp_multi_add_lin,corr_imp_add_multi_lin,corr_imp_add_add_lin,
+                                     corr_imp_multi_multi_sin,corr_imp_multi_add_sin,corr_imp_add_multi_sin,corr_imp_add_add_sin),
+                  target=index_Fisher
+                  )
+fig2
+results_df2<-dplyr::arrange(comparison2, distance)
+results_df2
+
+xtable(results_df2, digits=3)
+```
+
+```{r}
+data<-data_list[[4]]
+unique(data$subcategory)
+sigma.<-elasticity(data, start=start., end=end., method="f")
+
+
+index_Fisher<-price_indices(data, start=start., end=end.,formula="fisher", interval=TRUE)
+index_Laspeyres<-price_indices(data, start=start., end=end.,formula="laspeyres", interval=TRUE)
+indeks_Lloyd_Moulton<-price_indices(data, start=start., end=end.,formula="lloyd_moulton", sigma=sigma., interval=TRUE)
+
+cor_dhkh<-retro_index(data, start=start.,end=end.,formula="dhkh", name="DHKH",df=TRUE)
+
+#CES-imputation approach
+CES_imp<-retro_index(data, start=start.,end=end., approach="CES-imputation", 
+sigma=sigma., name="CES_imp",df=TRUE)
+
+
+#correction approach
+cor_multi_lin<-retro_index(data, start=start.,end=end., approach="correction", 
+method_index = "multiplicative", lambda="linear", name="corr_multi_lin",df=TRUE)
+
+cor_multi_sin<-retro_index(data, start=start.,end=end., approach="correction", 
+method_index = "multiplicative", lambda="sinusoidal", name="corr_multi_sin",df=TRUE)
+
+cor_add_lin<-retro_index(data, start=start.,end=end., approach="correction", 
+method_index = "additive", lambda="linear", name="corr_add_lin",df=TRUE)
+
+cor_add_sin<-retro_index(data, start=start.,end=end., approach="correction", 
+method_index = "additive", lambda="sinusoidal", name="corr_add_sin",df=TRUE)
+
+#imputation approach
+imp_multi_lin<-retro_index(data, start=start.,end=end., approach="imputation", 
+method_weights = "multiplicative", lambda="linear", name="imp_multi_lin",df=TRUE)
+
+imp_multi_sin<-retro_index(data, start=start.,end=end., approach="imputation", 
+method_weights = "multiplicative", lambda="sinusoidal", name="imp_multi_sin",df=TRUE)
+
+imp_add_lin<-retro_index(data, start=start.,end=end., approach="imputation", 
+method_weights = "additive", lambda="linear", name="imp_add_lin",df=TRUE)
+
+imp_add_sin<-retro_index(data, start=start.,end=end., approach="imputation", 
+method_weights = "additive", lambda="sinusoidal", name="imp_add_sin",df=TRUE)
+
+#correction-imputation approach
+
+corr_imp_multi_multi_lin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "multiplicative", method_weights = "multiplicative", lambda="linear", name="corr_imp_multi_multi_lin",df=TRUE)
+
+corr_imp_multi_add_lin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "multiplicative", method_weights = "additive", lambda="linear", name="corr_imp_multi_add_lin",df=TRUE)
+
+corr_imp_add_multi_lin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "additive", method_weights = "multiplicative", lambda="linear", name="corr_imp_add_multi_lin",df=TRUE)
+
+corr_imp_add_add_lin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "additive", method_weights = "additive", lambda="linear", name="corr_imp_add_add_lin",df=TRUE)
+  
+corr_imp_multi_multi_sin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "multiplicative", method_weights = "multiplicative", lambda="sinusoidal", name="corr_imp_multi_multi_sin",df=TRUE)
+
+corr_imp_multi_add_sin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "multiplicative", method_weights = "additive", lambda="sinusoidal", name="corr_imp_multi_add_sin",df=TRUE)
+
+corr_imp_add_multi_sin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "additive", method_weights = "multiplicative", lambda="sinusoidal", name="corr_imp_add_multi_sin",df=TRUE)
+
+corr_imp_add_add_sin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "additive", method_weights = "additive", lambda="sinusoidal", name="corr_imp_add_add_sin",df=TRUE)  
+
+
+fig3<-compare_indices_list(data=list(index_Fisher,index_Laspeyres,indeks_Lloyd_Moulton,CES_imp,cor_dhkh,cor_multi_lin, cor_multi_sin, cor_add_lin, cor_add_sin,
+                                     imp_multi_lin,imp_multi_sin,imp_add_lin,imp_add_sin,
+                                     corr_imp_multi_multi_lin,corr_imp_multi_add_lin,corr_imp_add_multi_lin,corr_imp_add_add_lin,
+                                     corr_imp_multi_multi_sin,corr_imp_multi_add_sin,corr_imp_add_multi_sin,corr_imp_add_add_sin))
+
+fig3<-fig3+ggplot2::ggtitle(as.character(unique(data$subcategory)))
+comparison3<-compare_to_target(data=cbind(index_Laspeyres,indeks_Lloyd_Moulton,CES_imp,cor_dhkh,cor_multi_lin, cor_multi_sin, cor_add_lin, cor_add_sin,
+                                     imp_multi_lin,imp_multi_sin,imp_add_lin,imp_add_sin,
+                                     corr_imp_multi_multi_lin,corr_imp_multi_add_lin,corr_imp_add_multi_lin,corr_imp_add_add_lin,
+                                     corr_imp_multi_multi_sin,corr_imp_multi_add_sin,corr_imp_add_multi_sin,corr_imp_add_add_sin),
+                  target=index_Fisher
+                  )
+fig3
+results_df3<-dplyr::arrange(comparison3, distance)
+results_df3
+
+xtable(results_df3, digits=3)
+```
+
+```{r}
+data<-data_list[[5]]
+unique(data$subcategory)
+sigma.<-elasticity(data, start=start., end=end., method="f")
+
+
+index_Fisher<-price_indices(data, start=start., end=end.,formula="fisher", interval=TRUE)
+index_Laspeyres<-price_indices(data, start=start., end=end.,formula="laspeyres", interval=TRUE)
+indeks_Lloyd_Moulton<-price_indices(data, start=start., end=end.,formula="lloyd_moulton", sigma=sigma., interval=TRUE)
+
+cor_dhkh<-retro_index(data, start=start.,end=end.,formula="dhkh", name="DHKH",df=TRUE)
+
+#CES-imputation approach
+CES_imp<-retro_index(data, start=start.,end=end., approach="CES-imputation", 
+sigma=sigma., name="CES_imp",df=TRUE)
+
+
+#correction approach
+cor_multi_lin<-retro_index(data, start=start.,end=end., approach="correction", 
+method_index = "multiplicative", lambda="linear", name="corr_multi_lin",df=TRUE)
+
+cor_multi_sin<-retro_index(data, start=start.,end=end., approach="correction", 
+method_index = "multiplicative", lambda="sinusoidal", name="corr_multi_sin",df=TRUE)
+
+cor_add_lin<-retro_index(data, start=start.,end=end., approach="correction", 
+method_index = "additive", lambda="linear", name="corr_add_lin",df=TRUE)
+
+cor_add_sin<-retro_index(data, start=start.,end=end., approach="correction", 
+method_index = "additive", lambda="sinusoidal", name="corr_add_sin",df=TRUE)
+
+#imputation approach
+imp_multi_lin<-retro_index(data, start=start.,end=end., approach="imputation", 
+method_weights = "multiplicative", lambda="linear", name="imp_multi_lin",df=TRUE)
+
+imp_multi_sin<-retro_index(data, start=start.,end=end., approach="imputation", 
+method_weights = "multiplicative", lambda="sinusoidal", name="imp_multi_sin",df=TRUE)
+
+imp_add_lin<-retro_index(data, start=start.,end=end., approach="imputation", 
+method_weights = "additive", lambda="linear", name="imp_add_lin",df=TRUE)
+
+imp_add_sin<-retro_index(data, start=start.,end=end., approach="imputation", 
+method_weights = "additive", lambda="sinusoidal", name="imp_add_sin",df=TRUE)
+
+#correction-imputation approach
+
+corr_imp_multi_multi_lin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "multiplicative", method_weights = "multiplicative", lambda="linear", name="corr_imp_multi_multi_lin",df=TRUE)
+
+corr_imp_multi_add_lin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "multiplicative", method_weights = "additive", lambda="linear", name="corr_imp_multi_add_lin",df=TRUE)
+
+corr_imp_add_multi_lin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "additive", method_weights = "multiplicative", lambda="linear", name="corr_imp_add_multi_lin",df=TRUE)
+
+corr_imp_add_add_lin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "additive", method_weights = "additive", lambda="linear", name="corr_imp_add_add_lin",df=TRUE)
+  
+corr_imp_multi_multi_sin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "multiplicative", method_weights = "multiplicative", lambda="sinusoidal", name="corr_imp_multi_multi_sin",df=TRUE)
+
+corr_imp_multi_add_sin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "multiplicative", method_weights = "additive", lambda="sinusoidal", name="corr_imp_multi_add_sin",df=TRUE)
+
+corr_imp_add_multi_sin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "additive", method_weights = "multiplicative", lambda="sinusoidal", name="corr_imp_add_multi_sin",df=TRUE)
+
+corr_imp_add_add_sin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "additive", method_weights = "additive", lambda="sinusoidal", name="corr_imp_add_add_sin",df=TRUE)  
+
+
+fig4<-compare_indices_list(data=list(index_Fisher,index_Laspeyres,indeks_Lloyd_Moulton,CES_imp,cor_dhkh,cor_multi_lin, cor_multi_sin, cor_add_lin, cor_add_sin,
+                                     imp_multi_lin,imp_multi_sin,imp_add_lin,imp_add_sin,
+                                     corr_imp_multi_multi_lin,corr_imp_multi_add_lin,corr_imp_add_multi_lin,corr_imp_add_add_lin,
+                                     corr_imp_multi_multi_sin,corr_imp_multi_add_sin,corr_imp_add_multi_sin,corr_imp_add_add_sin))
+
+fig4<-fig4+ggplot2::ggtitle(as.character(unique(data$subcategory)))
+comparison4<-compare_to_target(data=cbind(index_Laspeyres,indeks_Lloyd_Moulton,CES_imp,cor_dhkh,cor_multi_lin, cor_multi_sin, cor_add_lin, cor_add_sin,
+                                     imp_multi_lin,imp_multi_sin,imp_add_lin,imp_add_sin,
+                                     corr_imp_multi_multi_lin,corr_imp_multi_add_lin,corr_imp_add_multi_lin,corr_imp_add_add_lin,
+                                     corr_imp_multi_multi_sin,corr_imp_multi_add_sin,corr_imp_add_multi_sin,corr_imp_add_add_sin),
+                  target=index_Fisher
+                  )
+fig4
+results_df4<-dplyr::arrange(comparison4, distance)
+results_df4
+
+xtable(results_df4, digits=3)
+```
+
+```{r}
+library("ggpubr")
+fig<-ggarrange(plotlist=list(fig1, fig2, fig3, fig4),
+               ncol=2,nrow=2, 
+               common.legend=TRUE,legend="right")
+fig
+ggsave(plot=fig, filename="fig.jpg",width=12,height=10)
+```
+
+
+
+```{r}
+#average results based on 11 COICOP 6 product subgroups
+results<-list()
+
+for (i in 1:11) {
+data<-data_list[[i]]
+sigma.<-elasticity(data, start=start., end=end., method="f")
+
+index_Fisher<-price_indices(data, start=start., end=end.,formula="fisher", interval=TRUE)
+index_Laspeyres<-price_indices(data, start=start., end=end.,formula="laspeyres", interval=TRUE)
+indeks_Lloyd_Moulton<-price_indices(data, start=start., end=end.,formula="lloyd_moulton", sigma=sigma., interval=TRUE)
+
+cor_dhkh<-retro_index(data, start=start.,end=end.,formula="dhkh", name="DHKH",df=TRUE)
+
+#CES-imputation approach
+CES_imp<-retro_index(data, start=start.,end=end., approach="CES-imputation", 
+sigma=sigma., name="CES_imp",df=TRUE)
+
+#correction approach
+cor_multi_lin<-retro_index(data, start=start.,end=end., approach="correction", 
+method_index = "multiplicative", lambda="linear", name="corr_multi_lin",df=TRUE)
+
+cor_multi_sin<-retro_index(data, start=start.,end=end., approach="correction", 
+method_index = "multiplicative", lambda="sinusoidal", name="corr_multi_sin",df=TRUE)
+
+cor_add_lin<-retro_index(data, start=start.,end=end., approach="correction", 
+method_index = "additive", lambda="linear", name="corr_add_lin",df=TRUE)
+
+cor_add_sin<-retro_index(data, start=start.,end=end., approach="correction", 
+method_index = "additive", lambda="sinusoidal", name="corr_add_sin",df=TRUE)
+
+#imputation approach
+imp_multi_lin<-retro_index(data, start=start.,end=end., approach="imputation", 
+method_weights = "multiplicative", lambda="linear", name="imp_multi_lin",df=TRUE)
+
+imp_multi_sin<-retro_index(data, start=start.,end=end., approach="imputation", 
+method_weights = "multiplicative", lambda="sinusoidal", name="imp_multi_sin",df=TRUE)
+
+imp_add_lin<-retro_index(data, start=start.,end=end., approach="imputation", 
+method_weights = "additive", lambda="linear", name="imp_add_lin",df=TRUE)
+
+imp_add_sin<-retro_index(data, start=start.,end=end., approach="imputation", 
+method_weights = "additive", lambda="sinusoidal", name="imp_add_sin",df=TRUE)
+
+#correction-imputation approach
+
+corr_imp_multi_multi_lin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "multiplicative", method_weights = "multiplicative", lambda="linear", name="corr_imp_multi_multi_lin",df=TRUE)
+
+corr_imp_multi_add_lin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "multiplicative", method_weights = "additive", lambda="linear", name="corr_imp_multi_add_lin",df=TRUE)
+
+corr_imp_add_multi_lin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "additive", method_weights = "multiplicative", lambda="linear", name="corr_imp_add_multi_lin",df=TRUE)
+
+corr_imp_add_add_lin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "additive", method_weights = "additive", lambda="linear", name="corr_imp_add_add_lin",df=TRUE)
+  
+corr_imp_multi_multi_sin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "multiplicative", method_weights = "multiplicative", lambda="sinusoidal", name="corr_imp_multi_multi_sin",df=TRUE)
+
+corr_imp_multi_add_sin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "multiplicative", method_weights = "additive", lambda="sinusoidal", name="corr_imp_multi_add_sin",df=TRUE)
+
+corr_imp_add_multi_sin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "additive", method_weights = "multiplicative", lambda="sinusoidal", name="corr_imp_add_multi_sin",df=TRUE)
+
+corr_imp_add_add_sin<-retro_index(data, start=start.,end=end., approach="correction-imputation", 
+method_index = "additive", method_weights = "additive", lambda="sinusoidal", name="corr_imp_add_add_sin",df=TRUE)  
+
+
+results[[i]]<-compare_to_target(data=cbind(index_Laspeyres,indeks_Lloyd_Moulton,CES_imp,cor_dhkh,cor_multi_lin, cor_multi_sin, cor_add_lin, cor_add_sin,
+                                     imp_multi_lin,imp_multi_sin,imp_add_lin,imp_add_sin,
+                                     corr_imp_multi_multi_lin,corr_imp_multi_add_lin,corr_imp_add_multi_lin,corr_imp_add_add_lin,
+                                     corr_imp_multi_multi_sin,corr_imp_multi_add_sin,corr_imp_add_multi_sin,corr_imp_add_add_sin),
+                  target=index_Fisher
+                  )
+}
+
+
+results<-dplyr::bind_rows(results)
+
+results_df<-dplyr::arrange(dplyr::summarise(dplyr::group_by(results, by=index), distance=mean(distance), distance_lower=mean(distance_lower), distance_upper=mean(distance_upper)), distance)
+results_df
+
+xtable(results_df, digits=3)
+```
+
